@@ -1,0 +1,23 @@
+{
+  "name": "frontend-blazing",
+  "description": "Preparation for the web-app",
+  "main": "index.html",
+  "authors": [
+    "Ilya Purouski"
+  ],
+  "license": "ISC",
+  "keywords": [
+    "frontend",
+    "skeleton",
+    "framework"
+  ],
+  "moduleType": [],
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
