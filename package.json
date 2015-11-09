@@ -1,0 +1,19 @@
+{
+    "name": "frontend-blazing",
+    "version": "1.0.0",
+    "description": "Preparation for the web-app",
+    "main": "index.html",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "frontend",
+        "skeleton",
+        "framework"
+    ],
+    "author": "Ilya Purouski",
+    "license": "ISC",
+    "devDependencies": {
+
+    }
+}
