@@ -1,20 +1,21 @@
 'use strict';
 
 var
-    gulp            = require('gulp'),
-    watch           = require('gulp-watch'),
-    prefixer        = require('gulp-autoprefixer'),
-    uglify          = require('gulp-uglify'),
-    sass            = require('gulp-sass'),
-    sourcemaps      = require('gulp-sourcemaps'),
-    rigger          = require('gulp-rigger'),
+    browserSync     = require("browser-sync"),
     cssmin          = require('gulp-minify-css'),
+    gulp            = require('gulp'),
     imagemin        = require('gulp-imagemin'),
     notify          = require('gulp-notify'),
     pngquant        = require('imagemin-pngquant'),
+    prefixer        = require('gulp-autoprefixer'),
+    reload          = browserSync.reload,
+    rigger          = require('gulp-rigger'),
     rimraf          = require('rimraf'),
-    browserSync     = require("browser-sync"),
-    reload          = browserSync.reload;
+    sass            = require('gulp-sass'),
+    sftp            = require('gulp-sftp'),
+    sourcemaps      = require('gulp-sourcemaps'),
+    uglify          = require('gulp-uglify'),
+    watch           = require('gulp-watch');
 
 var path = {
     build: {
@@ -50,6 +51,17 @@ var config = {
     port: 9000,
     logPrefix: "Frontend_Blazing"
 };
+
+var hosting = {
+    host: 'ftp',
+    user: 'user',
+    pass: 'pass',
+    remotePath: 'path'
+};
+
+/* ------------------------------------------- */
+
+gulp.task('default', ['build', 'webserver', 'watch']);
 
 /* ------------------------------------------- */
 
@@ -146,6 +158,21 @@ gulp.task('watch', function(){
     });
 });
 
-/* ------------------------------------------- */
+/* ------------------------------------------------------- */
 
-gulp.task('default', ['build', 'webserver', 'watch']);
+// SFTP
+gulp.task('sftp', ['build'], function() {
+    return gulp.src('./build/**/*')
+        .pipe(sftp({
+            host: hosting.host,
+            user: hosting.user,
+            pass: hosting.pass,
+            remotePath: hosting.remotePath
+        }))
+        .pipe(notify('sftp Done!'));
+});
+
+// Deploy
+gulp.task('deploy', ['sftp']);
+
+/* ------------------------------------------------------- */
