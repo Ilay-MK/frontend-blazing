@@ -1,0 +1,17 @@
+.content-navigation {
+    border: 1px solid $blue;
+    color:
+        darken($blue, 9%);
+    display: -webkit-flex;
+    display: -webkit-box;
+    display: -moz-flex;
+    display: -ms-flex;
+    display: -o-flex;
+    display: flex;
+    height: 200px;
+    margin: auto;
+    a {
+        margin: auto;
+        padding: 5px 10px;
+    }
+}
