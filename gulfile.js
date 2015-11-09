@@ -1,18 +1,20 @@
 'use strict';
 
-var gulp = require('gulp'),
-    watch = require('gulp-watch'),
-    prefixer = require('gulp-autoprefixer'),
-    uglify = require('gulp-uglify'),
-    sass = require('gulp-sass'),
-    sourcemaps = require('gulp-sourcemaps'),
-    rigger = require('gulp-rigger'),
-    cssmin = require('gulp-minify-css'),
-    imagemin = require('gulp-imagemin'),
-    pngquant = require('imagemin-pngquant'),
-    rimraf = require('rimraf'),
-    browserSync = require("browser-sync"),
-    reload = browserSync.reload;
+var
+    gulp            = require('gulp'),
+    watch           = require('gulp-watch'),
+    prefixer        = require('gulp-autoprefixer'),
+    uglify          = require('gulp-uglify'),
+    sass            = require('gulp-sass'),
+    sourcemaps      = require('gulp-sourcemaps'),
+    rigger          = require('gulp-rigger'),
+    cssmin          = require('gulp-minify-css'),
+    imagemin        = require('gulp-imagemin'),
+    notify          = require('gulp-notify'),
+    pngquant        = require('imagemin-pngquant'),
+    rimraf          = require('rimraf'),
+    browserSync     = require("browser-sync"),
+    reload          = browserSync.reload;
 
 var path = {
     build: {
@@ -25,14 +27,14 @@ var path = {
     src: {
         html: 'src/*.html',
         js: 'src/js/main.js',
-        style: 'src/style/main.scss',
+        style: 'src/css/main.scss',
         img: 'src/img/**/*.*',
         fonts: 'src/fonts/**/*.*'
     },
     watch: {
         html: 'src/**/*.html',
         js: 'src/js/**/*.js',
-        style: 'src/style/**/*.scss',
+        style: 'src/css/**/*.scss',
         img: 'src/img/**/*.*',
         fonts: 'src/fonts/**/*.*'
     },
@@ -57,6 +59,7 @@ gulp.task('webserver', function () {
 
 gulp.task('clean', function (cb) {
     rimraf(path.clean, cb);
+    .pipe(notify('Сlean Build Done!'));
 });
 
 /* ------------------------------------------- */
@@ -65,7 +68,8 @@ gulp.task('build:html', function () {
     gulp.src(path.src.html)
         .pipe(rigger())
         .pipe(gulp.dest(path.build.html))
-        .pipe(reload({stream: true}));
+        .pipe(reload({stream: true}))
+        .pipe(notify('build:html Done!'));
 });
 
 gulp.task('build:js', function () {
@@ -75,7 +79,8 @@ gulp.task('build:js', function () {
         .pipe(uglify())
         .pipe(sourcemaps.write())
         .pipe(gulp.dest(path.build.js))
-        .pipe(reload({stream: true}));
+        .pipe(reload({stream: true}))
+        .pipe(notify('build:js Done!'));
 });
 
 gulp.task('build:style', function () {
@@ -91,7 +96,8 @@ gulp.task('build:style', function () {
         .pipe(cssmin())
         .pipe(sourcemaps.write())
         .pipe(gulp.dest(path.build.css))
-        .pipe(reload({stream: true}));
+        .pipe(reload({stream: true}))
+        .pipe(notify('build:style Done!'));
 });
 
 gulp.task('build:image', function () {
@@ -103,7 +109,8 @@ gulp.task('build:image', function () {
             interlaced: true
         }))
         .pipe(gulp.dest(path.build.img))
-        .pipe(reload({stream: true}));
+        .pipe(reload({stream: true}))
+        .pipe(notify('build:image Done!'));
 });
 
 gulp.task('build:fonts', function() {
