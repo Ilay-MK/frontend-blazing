@@ -5,6 +5,7 @@ var
     cssmin          = require('gulp-minify-css'),
     gulp            = require('gulp'),
     imagemin        = require('gulp-imagemin'),
+    minifyHTML      = require('gulp-minify-html'),
     notify          = require('gulp-notify'),
     pngquant        = require('imagemin-pngquant'),
     prefixer        = require('gulp-autoprefixer'),
@@ -15,29 +16,30 @@ var
     sftp            = require('gulp-sftp'),
     sourcemaps      = require('gulp-sourcemaps'),
     uglify          = require('gulp-uglify'),
-    watch           = require('gulp-watch');
+    watch           = require('gulp-watch')
+;
 
 var path = {
     build: {
-        html: 'build/',
-        js: 'build/js/',
-        css: 'build/css/',
-        img: 'build/img/',
-        fonts: 'build/fonts/'
+        html: './build/',
+        js: './build/js/',
+        css: './build/css/',
+        img: './build/img/',
+        fonts: './build/fonts/'
     },
     src: {
-        html: 'src/*.html',
-        js: 'src/js/main.js',
-        style: 'src/css/main.scss',
-        img: 'src/img/**/*.*',
-        fonts: 'src/fonts/**/*.*'
+        html: './src/*.html',
+        js: './src/js/main.js',
+        style: './src/css/main.scss',
+        img: './src/img/**/*.*',
+        fonts: './src/fonts/**/*.*'
     },
     watch: {
-        html: 'src/**/*.html',
-        js: 'src/js/**/*.js',
-        style: 'src/css/**/*.scss',
-        img: 'src/img/**/*.*',
-        fonts: 'src/fonts/**/*.*'
+        html: './src/**/*.html',
+        js: './src/js/**/*.js',
+        style: './src/css/**/*.scss',
+        img: './src/img/**/*.*',
+        fonts: './src/fonts/**/*.*'
     },
     clean: './build'
 };
@@ -70,7 +72,7 @@ gulp.task('webserver', function () {
 });
 
 gulp.task('clean', function (cb) {
-    rimraf(path.clean, cb);
+    rimraf(path.clean, cb)
     .pipe(notify('Сlean Build Done!'));
 });
 
@@ -99,7 +101,7 @@ gulp.task('build:style', function () {
     gulp.src(path.src.style)
         .pipe(sourcemaps.init())
         .pipe(sass({
-            includePaths: ['src/css/'],
+            includePaths: ['./src/css/'],
             outputStyle: 'compressed',
             sourceMap: true,
             errLogToConsole: true

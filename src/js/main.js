@@ -1,6 +1,3 @@
-$(function(){
-    console.log('in main.js! ');
-})
 /*
  Third party
  */
@@ -9,4 +6,7 @@ $(function(){
 /*
     Custom
  */
+$(function(){
+    console.log('in main.js! ');
+})
 //= partials/plugins.js
