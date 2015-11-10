@@ -28,6 +28,7 @@ var
 var path = {
     build: {
         html: './build/',
+        searchHTML: './build/*.html',
         js: './build/js/',
         css: './build/css/',
         img: './build/img/',
@@ -35,6 +36,8 @@ var path = {
     },
     src: {
         html: './src/*.html',
+        htmlBase: './src/template/base/*.html',
+        htmlToBase: './src/template/base/',
         js: './src/js/main.js',
         style: './src/css/main.scss',
         img: './src/img/**/*.*',
@@ -47,14 +50,35 @@ var path = {
         img: './src/img/**/*.*',
         fonts: './src/fonts/**/*.*'
     },
-    clean: './build'
+    clean: './build',
+    build: './build',
+    dist: './build/**/*',
+    maps: './maps',
+    bowerComponents: './bower_components',
+    bowerConfig: './bower.json'
+};
+
+/* ------------------- */
+
+var crossBrousersCompatibility = {
+    brousers: {
+        'last 20 versions',
+        '> 0%',
+        'ie 6',
+        'ie 7',
+        'ie 8',
+        'ie 9',
+        'Firefox ESR',
+        'Opera 12.1'
+    },
+    cascade: false
 };
 
 /* ------------------- */
 
 var config = {
     server: {
-        baseDir: "./build"
+        baseDir: path.build
     },
     tunnel: true,
     host: 'localhost',
@@ -101,7 +125,7 @@ gulp.task('build:js', function () {
         .pipe(rigger())
         .pipe(sourcemaps.init())
         .pipe(uglify())
-        .pipe(sourcemaps.write('./maps'))
+        .pipe(sourcemaps.write(path.maps))
         .pipe(gulp.dest(path.build.js))
         .pipe(reload({stream: true}))
         .pipe(notify('build:js Done!'));
@@ -117,11 +141,11 @@ gulp.task('build:style', function () {
             errLogToConsole: true
         }))
         .pipe(prefixer({
-            browsers: ['last 20 versions', '> 0%', 'ie 6', 'ie 7', 'ie 8', 'ie 9', 'Firefox ESR', 'Opera 12.1'],
-            cascade: false
+            browsers: [crossBrousersCompatibility.brousers],
+            cascade: crossBrousersCompatibility.cascade
         }))
         .pipe(minifyCss())
-        .pipe(sourcemaps.write('./maps'))
+        .pipe(sourcemaps.write(path.maps))
         .pipe(gulp.dest(path.build.css))
         .pipe(reload({stream: true}))
         .pipe(notify('build:style Done!'));
@@ -177,49 +201,49 @@ gulp.task('watch:build', function(){
 
 // Wiredep
 gulp.task('wiredep', function() {
-    gulp.src('./src/template/base/*.html')
+    gulp.src(path.src.htmlBase)
         .pipe(wiredep({
-            directory: "./bower_components"
+            directory: path.bowerComponents
         }))
-        .pipe(gulp.dest('./src/template/base/'))
+        .pipe(gulp.dest(path.src.htmlToBase)
         .pipe(reload({stream: true}))
         .pipe(notify('Wiredep Done!'));
 });
 
 // Watch Wiredep
 gulp.task('watch:wiredep', function() {
-    gulp.watch('bower.json', ['wiredep']);
+    gulp.watch(path.bowerConfig, ['wiredep']);
 })
 
 // Google CDN
 gulp.task('cdn', function() {
-    return gulp.src('./src/template/base/*.html')
-        .pipe(googlecdn(require('./bower.json')))
-        .pipe(gulp.dest('./src/template/base/'))
+    return gulp.src(path.src.htmlBase)
+        .pipe(googlecdn(require(path.bowerConfig)))
+        .pipe(gulp.dest(path.src.htmlToBase))
         .pipe(reload({stream: true}))
         .pipe(notify('GoogleCDN Done!'));
 });
 
 // Watch Google CDN
 gulp.task('watch:cdn', function() {
-    gulp.watch('bower.json', ['cdn']);
+    gulp.watch(path.bowerConfig, ['cdn']);
 })
 
 /* ---------------------- */
 
 // Google CDN
 gulp.task('wiredep+cdn', function() {
-    return gulp.src('./src/template/base/*.html')
+    return gulp.src(path.src.htmlBase')
         // Wiredep
         .pipe(wiredep({
-            directory: "./bower_components"
+            directory: path.bowerComponents
         }))
-        .pipe(gulp.dest('./src/template/base/'))
+        .pipe(gulp.dest(path.src.htmlToBase))
         .pipe(reload({stream: true}))
         .pipe(notify('Wiredep Done!'))
         // CDN
-        .pipe(googlecdn(require('./bower.json')))
-        .pipe(gulp.dest('./src/template/base/'))
+        .pipe(googlecdn(require(path.bowerConfig)))
+        .pipe(gulp.dest(path.src.htmlToBase))
         .pipe(reload({stream: true}))
         .pipe(notify('GoogleCDN Done!'));
 });
@@ -235,7 +259,7 @@ gulp.task('watch:wiredep+cdn', function() {
 gulp.task('useref', function() {
     var assets = useref.assets();
 
-    return gulp.src('./build/*.html')
+    return gulp.src(path.build.searchHTML)
         .pipe(assets)
         .pipe(gulpif('*.js', uglify()))
         .pipe(gulpif('*.css', minifyCss({
@@ -243,7 +267,7 @@ gulp.task('useref', function() {
         })))
         .pipe(assets.restore())
         .pipe(useref())
-        .pipe(gulp.dest('./build'))
+        .pipe(gulp.dest(path.build))
         .pipe(reload({stream: true}))
         .pipe(notify('Useref Done!'));
 });
@@ -252,7 +276,7 @@ gulp.task('useref', function() {
 
 // SFTP
 gulp.task('sftp', ['build'], function() {
-    return gulp.src('./build/**/*')
+    return gulp.src(path.dist)
         .pipe(sftp({
             host: hosting.host,
             user: hosting.user,
