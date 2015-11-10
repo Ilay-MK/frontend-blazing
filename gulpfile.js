@@ -2,9 +2,11 @@
 
 var
     browserSync     = require("browser-sync"),
-    cssmin          = require('gulp-minify-css'),
+    googlecdn       = require('gulp-google-cdn'),
     gulp            = require('gulp'),
+    gulpif          = require('gulp-if'),
     imagemin        = require('gulp-imagemin'),
+    minifyCss       = require('gulp-minify-css'),
     minifyHTML      = require('gulp-minify-html'),
     notify          = require('gulp-notify'),
     pngquant        = require('imagemin-pngquant'),
@@ -16,8 +18,12 @@ var
     sftp            = require('gulp-sftp'),
     sourcemaps      = require('gulp-sourcemaps'),
     uglify          = require('gulp-uglify'),
-    watch           = require('gulp-watch')
+    useref          = require('gulp-useref'),
+    watch           = require('gulp-watch'),
+    wiredep         = require('wiredep').stream
 ;
+
+/* ------------------- */
 
 var path = {
     build: {
@@ -44,6 +50,8 @@ var path = {
     clean: './build'
 };
 
+/* ------------------- */
+
 var config = {
     server: {
         baseDir: "./build"
@@ -54,6 +62,8 @@ var config = {
     logPrefix: "Frontend_Blazing"
 };
 
+/* ------------------- */
+
 var hosting = {
     host: 'ftp',
     user: 'user',
@@ -63,7 +73,8 @@ var hosting = {
 
 /* ------------------------------------------- */
 
-gulp.task('default', ['build', 'webserver', 'watch']);
+gulp.task('default', ['wiredep+cdn', 'watch:wiredep+cdn']);
+gulp.task('start', ['build', 'webserver', 'watch']);
 
 /* ------------------------------------------- */
 
@@ -71,9 +82,8 @@ gulp.task('webserver', function () {
     browserSync(config);
 });
 
-gulp.task('clean', function (cb) {
-    rimraf(path.clean, cb)
-    .pipe(notify('Сlean Build Done!'));
+gulp.task('clean:build', function (cb) {
+    rimraf(path.clean, cb);
 });
 
 /* ------------------------------------------- */
@@ -91,7 +101,7 @@ gulp.task('build:js', function () {
         .pipe(rigger())
         .pipe(sourcemaps.init())
         .pipe(uglify())
-        .pipe(sourcemaps.write())
+        .pipe(sourcemaps.write('./maps'))
         .pipe(gulp.dest(path.build.js))
         .pipe(reload({stream: true}))
         .pipe(notify('build:js Done!'));
@@ -106,9 +116,12 @@ gulp.task('build:style', function () {
             sourceMap: true,
             errLogToConsole: true
         }))
-        .pipe(prefixer())
-        .pipe(cssmin())
-        .pipe(sourcemaps.write())
+        .pipe(prefixer({
+            browsers: ['last 20 versions', '> 0%', 'ie 6', 'ie 7', 'ie 8', 'ie 9', 'Firefox ESR', 'Opera 12.1'],
+            cascade: false
+        }))
+        .pipe(minifyCss())
+        .pipe(sourcemaps.write('./maps'))
         .pipe(gulp.dest(path.build.css))
         .pipe(reload({stream: true}))
         .pipe(notify('build:style Done!'));
@@ -142,7 +155,7 @@ gulp.task('build', [
 
 /* ------------------------------------------- */
 
-gulp.task('watch', function(){
+gulp.task('watch:build', function(){
     watch([path.watch.html], function(event, cb) {
         gulp.start('build:html');
     });
@@ -158,6 +171,81 @@ gulp.task('watch', function(){
     watch([path.watch.fonts], function(event, cb) {
         gulp.start('build:fonts');
     });
+});
+
+/* ------------------------------------------- */
+
+// Wiredep
+gulp.task('wiredep', function() {
+    gulp.src('./src/template/base/*.html')
+        .pipe(wiredep({
+            directory: "./bower_components"
+        }))
+        .pipe(gulp.dest('./src/template/base/'))
+        .pipe(reload({stream: true}))
+        .pipe(notify('Wiredep Done!'));
+});
+
+// Watch Wiredep
+gulp.task('watch:wiredep', function() {
+    gulp.watch('bower.json', ['wiredep']);
+})
+
+// Google CDN
+gulp.task('cdn', function() {
+    return gulp.src('./src/template/base/*.html')
+        .pipe(googlecdn(require('./bower.json')))
+        .pipe(gulp.dest('./src/template/base/'))
+        .pipe(reload({stream: true}))
+        .pipe(notify('GoogleCDN Done!'));
+});
+
+// Watch Google CDN
+gulp.task('watch:cdn', function() {
+    gulp.watch('bower.json', ['cdn']);
+})
+
+/* ---------------------- */
+
+// Google CDN
+gulp.task('wiredep+cdn', function() {
+    return gulp.src('./src/template/base/*.html')
+        // Wiredep
+        .pipe(wiredep({
+            directory: "./bower_components"
+        }))
+        .pipe(gulp.dest('./src/template/base/'))
+        .pipe(reload({stream: true}))
+        .pipe(notify('Wiredep Done!'))
+        // CDN
+        .pipe(googlecdn(require('./bower.json')))
+        .pipe(gulp.dest('./src/template/base/'))
+        .pipe(reload({stream: true}))
+        .pipe(notify('GoogleCDN Done!'));
+});
+
+// Watch:wiredep+cdn
+gulp.task('watch:wiredep+cdn', function() {
+    gulp.watch('bower.json', ['wiredep+cdn']);
+})
+
+/* ------------------------------------------------------- */
+
+// Useref {useref} concat *.js/*.css -> vendor/main
+gulp.task('useref', function() {
+    var assets = useref.assets();
+
+    return gulp.src('./build/*.html')
+        .pipe(assets)
+        .pipe(gulpif('*.js', uglify()))
+        .pipe(gulpif('*.css', minifyCss({
+            compatibility: 'ie8'
+        })))
+        .pipe(assets.restore())
+        .pipe(useref())
+        .pipe(gulp.dest('./build'))
+        .pipe(reload({stream: true}))
+        .pipe(notify('Useref Done!'));
 });
 
 /* ------------------------------------------------------- */
