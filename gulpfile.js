@@ -18,6 +18,7 @@ var
     sftp            = require('gulp-sftp'),
     sourcemaps      = require('gulp-sourcemaps'),
     uglify          = require('gulp-uglify'),
+    uncss           = require('gulp-uncss'),
     useref          = require('gulp-useref'),
     watch           = require('gulp-watch'),
     wiredep         = require('wiredep').stream
@@ -28,9 +29,10 @@ var
 var path = {
     build: {
         html: './build/',
-        searchHTML: './build/*.html',
+        searchHTML: './build/**/*.html',
         js: './build/js/',
         css: './build/css/',
+        searchCSS: './build/css/**/*.css',
         img: './build/img/',
         fonts: './build/fonts/'
     },
@@ -50,10 +52,10 @@ var path = {
         img: './src/img/**/*.*',
         fonts: './src/fonts/**/*.*'
     },
-    clean: './build',
-    build: './build',
+    clean: './build/',
+    dirBuild: './build/',
     dist: './build/**/*',
-    maps: './maps',
+    maps: './maps/',
     bowerComponents: './bower_components',
     bowerConfig: './bower.json'
 };
@@ -61,7 +63,7 @@ var path = {
 /* ------------------- */
 
 var crossBrousersCompatibility = {
-    brousers: {
+    brousers: [
         'last 20 versions',
         '> 0%',
         'ie 6',
@@ -70,7 +72,7 @@ var crossBrousersCompatibility = {
         'ie 9',
         'Firefox ESR',
         'Opera 12.1'
-    },
+    ],
     cascade: false
 };
 
@@ -78,7 +80,7 @@ var crossBrousersCompatibility = {
 
 var config = {
     server: {
-        baseDir: path.build
+        baseDir: path.dirBuild
     },
     tunnel: true,
     host: 'localhost',
@@ -97,8 +99,8 @@ var hosting = {
 
 /* ------------------------------------------- */
 
-gulp.task('default', ['wiredep+cdn', 'watch:wiredep+cdn']);
-gulp.task('start', ['build', 'webserver', 'watch']);
+gulp.task('default', ['build', 'webserver', 'watch:build']);
+gulp.task('wiredep+cdn+watch', ['wiredep+cdn', 'watch:wiredep+cdn']);
 
 /* ------------------------------------------- */
 
@@ -113,8 +115,21 @@ gulp.task('clean:build', function (cb) {
 /* ------------------------------------------- */
 
 gulp.task('build:html', function () {
+    var opts = {
+        empty: false, // do not remove empty attributes
+        cdata: true, // do not strip CDATA from scripts
+        comments: false, // do not remove comments
+        conditionals: true, // do not remove conditional internet explorer comments
+        spare: true, // do not remove redundant attributes
+        quotes: false, // do not remove arbitrary quotes
+        loose: false // preserve one whitespace
+    };
+
     gulp.src(path.src.html)
+        .pipe(sourcemaps.init())
         .pipe(rigger())
+        /*.pipe(minifyHTML(opts))*/
+        .pipe(sourcemaps.write(path.maps))
         .pipe(gulp.dest(path.build.html))
         .pipe(reload({stream: true}))
         .pipe(notify('build:html Done!'));
@@ -141,7 +156,7 @@ gulp.task('build:style', function () {
             errLogToConsole: true
         }))
         .pipe(prefixer({
-            browsers: [crossBrousersCompatibility.brousers],
+            browsers: crossBrousersCompatibility.brousers,
             cascade: crossBrousersCompatibility.cascade
         }))
         .pipe(minifyCss())
@@ -205,7 +220,7 @@ gulp.task('wiredep', function() {
         .pipe(wiredep({
             directory: path.bowerComponents
         }))
-        .pipe(gulp.dest(path.src.htmlToBase)
+        .pipe(gulp.dest(path.src.htmlToBase))
         .pipe(reload({stream: true}))
         .pipe(notify('Wiredep Done!'));
 });
@@ -233,7 +248,7 @@ gulp.task('watch:cdn', function() {
 
 // Google CDN
 gulp.task('wiredep+cdn', function() {
-    return gulp.src(path.src.htmlBase')
+    return gulp.src(path.src.htmlBase)
         // Wiredep
         .pipe(wiredep({
             directory: path.bowerComponents
@@ -250,7 +265,7 @@ gulp.task('wiredep+cdn', function() {
 
 // Watch:wiredep+cdn
 gulp.task('watch:wiredep+cdn', function() {
-    gulp.watch('bower.json', ['wiredep+cdn']);
+    gulp.watch(path.bowerConfig, ['wiredep+cdn']);
 })
 
 /* ------------------------------------------------------- */
@@ -267,9 +282,22 @@ gulp.task('useref', function() {
         })))
         .pipe(assets.restore())
         .pipe(useref())
-        .pipe(gulp.dest(path.build))
+        .pipe(gulp.dest(path.dirBuild))
         .pipe(reload({stream: true}))
         .pipe(notify('Useref Done!'));
+});
+
+
+/* ------------------------------------------------------- */
+
+// Uncss
+gulp.task('uncss', function () {
+    return gulp.src(path.build.searchCSS)
+        .pipe(uncss({
+            html: [path.build.searchHTML]
+        }))
+        .pipe(gulp.dest(path.build.css))
+        .pipe(notify('UnCSS Done!'));
 });
 
 /* ------------------------------------------------------- */
