@@ -296,6 +296,9 @@ gulp.task('uncss', function () {
         .pipe(uncss({
             html: [path.build.searchHTML]
         }))
+        .pipe(minifyCss({
+            compatibility: 'ie8'
+        }))
         .pipe(gulp.dest(path.build.css))
         .pipe(notify('UnCSS Done!'));
 });
